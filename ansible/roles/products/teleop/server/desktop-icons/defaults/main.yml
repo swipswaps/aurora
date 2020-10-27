@@ -17,7 +17,7 @@ ethercat_interface: "eth00"
 ethercat_left_hand: "eth01"
 ethercat_interface_var: "eth0"
 ethercat_interface_value: "eth0"
-server_ip: "10.9.11.1"
+server_ip: "10.9.11.4"
 demohand_icons: false
 teleop_control_launch: "sr_robot_launch sr_hardware_control_loop.launch"
 ur_robot_type: "ur10e"
