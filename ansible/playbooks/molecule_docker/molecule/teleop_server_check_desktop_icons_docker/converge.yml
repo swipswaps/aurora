@@ -3,7 +3,7 @@
   import_playbook: ../../../teleop_deploy.yml
     reinstall=true
     use_openvpn=false
-    ethercat_interface="enp0s25"
+    ethercat_right_hand="enp0s25"
     image="shadowrobot/dexterous-hand"
     tag="melodic-release"
     nvidia_docker=false
@@ -12,6 +12,8 @@
     customer_key="invalidkey"
     glove="shadow_glove"
     hand_side=right
+    arm_ip_right=10.8.1.1
+    ethercat_right_arm=eno1
     sim_icon=true
     sudo_password="ubuntu"
     demohand_icons=true

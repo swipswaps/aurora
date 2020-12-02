@@ -1,8 +1,14 @@
 ---
-- name: Set server hostname variable
+- name: Set server hostname variable and validate input variables
   hosts: server
   connection: local
   gather_facts: yes
+  pre_tasks:
+    - name: include products/common/validation role
+      include_role:
+        name: products/common/validation
+      vars:
+        playbook: "server_and_nuc_deploy"
   tasks:
     - name: Extract hostname from server
       set_fact:
@@ -10,21 +16,31 @@
       when: skip_molecule_task is not defined
 
 - name: Add IP address of all hosts to computer that is running Ansible
-  hosts: 127.0.0.1
+  hosts: server
   connection: local
-  gather_facts: no
+  gather_facts: yes
   tasks:
     - name: Add lines in /etc/hosts in computer that is running Ansible
-      lineinfile:
+      blockinfile:
         dest: /etc/hosts
-        regexp: '^{{ item }}.*$'
-        line: "{{ item }} {{ hostvars[item].ansible_host }}"
         state: present
+        block: |
+          {{ item }} {{ hostvars[item].ansible_host }}
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ hostvars[item].ansible_host }}"
         # Allowing Ansible to modify /etc/hosts inside Docker containers
         unsafe_writes: yes
-      when: hostvars[item].ansible_host is defined
       with_items: "{{ groups.all }}"
+      when: hostvars[item].ansible_host is defined
       become: yes
+
+    - name: Delete previously known hosts to avoid an ssh error
+      shell: |
+        ssh-keygen -q -f "/home/{{ ansible_user_id }}/.ssh/known_hosts" -R {{ hostvars[item].ansible_host }}
+        ssh-keygen -q -f "/home/{{ ansible_user_id }}/.ssh/known_hosts" -R '{{ item }}'
+      changed_when: false
+      ignore_errors: true
+      when: hostvars[item].ansible_host is defined
+      with_items: "{{ groups.all | difference([inventory_hostname]) }}"
 
 - name: Install Python 3
   import_playbook: ./install_python3.yml
@@ -40,10 +56,6 @@
 - name: Install Hand software on Ubuntu server laptop
   hosts: server
   pre_tasks:
-    - name: No product is defined
-      when: product != 'hand_e' and product != 'arm_hand_e' and product != 'hand_lite' and product != 'arm_hand_lite' and product != 'hand_extra_lite' and product != 'arm_hand_extra_lite' and product != 'hand_h'
-      meta: end_play
-
     - name: check if customer_key is provided and not false
       when: customer_key is defined and customer_key | length > 0
       set_fact:
@@ -65,15 +77,11 @@
       become: yes
 
   roles:
-    - { role: products/hand-e/server/deploy, when: product == 'hand_e' or product == 'arm_hand_e' or product == 'hand_lite' or product == 'arm_hand_lite' or product == 'hand_extra_lite' or product == 'arm_hand_extra_lite' }
+    - { role: products/hand-e/server/deploy }
 
 - name: Install Hand software on control machine
   hosts: control_machine
   pre_tasks:
-    - name: No product is defined
-      when: product != 'hand_e' and product != 'arm_hand_e' and product != 'hand_lite' and product != 'arm_hand_lite' and product != 'hand_extra_lite' and product != 'arm_hand_extra_lite' and product != 'hand_h'
-      meta: end_play
-
     - name: check if customer_key is provided and not false
       when: customer_key is defined and customer_key | length > 0
       set_fact:
@@ -95,7 +103,7 @@
       become: yes
 
   roles:
-    - { role: products/hand-e/control_machine/deploy, when: product == 'hand_e' or product == 'arm_hand_e' or product == 'hand_lite' or product == 'arm_hand_lite' or product == 'hand_extra_lite' or product == 'arm_hand_extra_lite' }
+    - { role: products/hand-e/control_machine/deploy }
 
 - name: Inform user for reboot
   hosts: 127.0.0.1
