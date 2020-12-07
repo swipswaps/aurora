@@ -1,4 +1,9 @@
 ---
+- name: Include products/common/clear-icons role
+  include_role:
+    name: products/common/clear-icons
+  when: skip_molecule_task is not defined
+
 - name: Set server hostname
   set_fact:
     server_hostname: "{{ hostvars[groups['server'][0]]['ansible_host'] }}"
@@ -46,6 +51,11 @@
   vars:
     ros_master: "{{ server_hostname }}"
     container_terminal_title: "Teleop Client Container"
+
+- name: Include products/common/hand-parameters role
+  include_role:
+    name: products/common/hand-parameters
+  when: config_branch is defined and config_branch | length > 0
 
 - name: Include docker/aws role
   include_role:
