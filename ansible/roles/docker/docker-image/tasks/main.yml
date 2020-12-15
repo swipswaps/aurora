@@ -1,11 +1,4 @@
 ---
-- name: Docker login
-  docker_login:
-    username: "{{ docker_username }}"
-    password: "{{ docker_password }}"
-  when: docker_username is defined and docker_password is defined
-  become: yes
-
 - name: Reading path to Python repository with Docker package
   command: "{{ ansible_python_interpreter }} -c \"import docker as _; print(_.__file__.replace('/docker/__init__.py', ''))\""
   register: python_packages_path_output
