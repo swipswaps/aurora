@@ -2,7 +2,7 @@
 - name: Teleop Nuc machine playbook for config check
   import_playbook: ../../../teleop_deploy.yml
   vars:
-    image: public.ecr.aws/shadowrobot/dexterous-hand
+    image: shadowrobot/dexterous-hand
     tag: melodic-release
     reinstall: true
     use_openvpn: false

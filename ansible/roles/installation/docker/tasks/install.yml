@@ -37,7 +37,6 @@
     name: 'docker'
     state: 'started'
     enabled: 'yes'
-  ignore_errors: yes
 
 - name: Add users to docker group
   user:
